@@ -65,53 +65,36 @@ class NotificationListener : NotificationListenerService() {
                             title = metadata.getString(MediaMetadata.METADATA_KEY_TITLE)
                             icon = mediaNotificationIcons[packageName]
                             art = loadArt(metadata)?.let { Icon.createWithBitmap(it) }
+                            Log.d(TAG, "onMetadataChanged: $packageName $this")
                         }
-                        SmartspacerTargetProvider.notifyChange(this@NotificationListener, LyricTarget::class.java, null)
+                        SmartspacerTargetProvider.notifyChange(this@NotificationListener, LyricTarget::class.java, packageName)
                     }
 
                     override fun onPlaybackStateChanged(state: PlaybackState?) {
                         state ?: return
                         data.getOrPut(packageName) { Data() }.apply {
                             playing = state.state == PlaybackState.STATE_PLAYING
+                            Log.d(TAG, "onPlaybackStateChanged: $packageName $this")
                         }
-                        SmartspacerTargetProvider.notifyChange(this@NotificationListener, LyricTarget::class.java, null)
+                        SmartspacerTargetProvider.notifyChange(this@NotificationListener, LyricTarget::class.java, packageName)
                     }
                 }
             }
             controller.registerCallback(callback)
         }
-
-        val alivePackages = controllers.map { it.packageName }
-        data.filterKeys { it !in alivePackages }.forEach { (k, _) ->
-            data.remove(k)
-            LyricReceiver.data.remove(k)
+        val alivePackages = controllers.map { it.packageName }.toSet()
+        data.keys.filter { it !in alivePackages }.forEach {
+            data.remove(it)
+            LyricReceiver.data.remove(it)
+            Log.d(TAG, "onSessionUnactive: $it")
         }
+        Log.d(TAG, "onActiveSessionsChanged: $alivePackages")
         SmartspacerTargetProvider.notifyChange(this, LyricTarget::class.java)
     }
 
     private fun loadArt(metaData: MediaMetadata): Bitmap? {
-        var art = metaData.getBitmap(MediaMetadata.METADATA_KEY_ART)
-        if (art == null) {
-            art = loadBitmapFromUri(metaData.getString(MediaMetadata.METADATA_KEY_ART_URI))
-        }
-        if (art == null) {
-            art = metaData.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
-        }
-        if (art == null) {
-            art = loadBitmapFromUri(metaData.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI))
-        }
-        return art
-    }
-
-    private fun loadBitmapFromUri(uri: String?): Bitmap? {
-        uri ?: return null
-        return try {
-            contentResolver.openInputStream(Uri.parse(uri))?.use {
-                BitmapFactory.decodeStream(it)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to load bitmap from $uri", e)
-            null
-        }
+        return metaData.getBitmap(MediaMetadata.METADATA_KEY_ART)
+            ?: metaData.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
+            ?: metaData.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)
     }
 }

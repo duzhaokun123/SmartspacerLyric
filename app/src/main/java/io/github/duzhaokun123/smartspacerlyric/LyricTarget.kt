@@ -30,7 +30,6 @@ class LyricTarget : SmartspacerTargetProvider() {
             label = "Lyric",
             icon = defaultIcon,
             description  = "Lyric using LyricGetter API",
-            allowAddingMoreThanOnce = false,
         )
     }
 
@@ -39,6 +38,7 @@ class LyricTarget : SmartspacerTargetProvider() {
         val packages = NotificationListener.data.keys + LyricReceiver.data.keys
         packages.forEach {  packageName ->
             val data = marge(packageName, NotificationListener.data[packageName] ?: NotificationListener.Data(), LyricReceiver.data[packageName] ?: LyricReceiver.Data())
+            Log.d(TAG, "getSmartspaceTargets: $packageName $data")
             if (data.image == null) {
                 TargetTemplate.Basic(
                     id = packageName,
@@ -73,9 +73,9 @@ class LyricTarget : SmartspacerTargetProvider() {
     private fun marge(packageName: String, mediaData: NotificationListener.Data, lyricData: LyricReceiver.Data): Data {
         return Data(
             title = mediaData.title ?: packageName,
-            subtitle = if (mediaData.playing || lyricData.playing) lyricData.lastLyric ?: "Playing" else "Paused",
+            subtitle = if (mediaData.playing || lyricData.playing) lyricData.lyric ?: "Playing" else "Paused",
             image = mediaData.art,
-            icon = lyricData.lastIcon ?: mediaData.icon ?: defaultIcon,
+            icon = lyricData.icon ?: mediaData.icon ?: defaultIcon,
         )
     }
 }

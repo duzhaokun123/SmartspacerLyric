@@ -16,6 +16,11 @@
 | ![1](images/img.png) | ![2](images/img2.png) |
 |----------------------|-----------------------|
 
+## 已知问题
+
+- 网易云音乐 播放 vip 歌曲会导致 media session 回调停止, 进而媒体信息不更新
+  - callback 被无征兆移除(?)
+
 ## 感谢
 
 [AOSP](https://source.android.com/)

@@ -12,8 +12,8 @@ import com.kieronquinn.app.smartspacer.sdk.provider.SmartspacerTargetProvider
 
 class LyricReceiver : BroadcastReceiver() {
     data class Data(
-        var lastLyric: String? = null,
-        var lastIcon: Icon? = null,
+        var lyric: String? = null,
+        var icon: Icon? = null,
         var playing: Boolean = false,
     )
 
@@ -38,15 +38,17 @@ class LyricReceiver : BroadcastReceiver() {
                     .takeIf { lyricData.extraData.customIcon }
                     ?.let { Icon.createWithAdaptiveBitmap(Tools.base64ToDrawable(lyricData.extraData.base64Icon)) }
                 data.getOrPut(packageName) { Data() }.apply {
-                    lastLyric = lyricData.lyric
-                    lastIcon = icon
+                    lyric = lyricData.lyric
+                    this.icon = icon
                     playing = true
+                    Log.d(TAG, "onLyricUpdate: $packageName $this")
                 }
                 SmartspacerTargetProvider.notifyChange(context, LyricTarget::class.java, packageName)
             }
             OperateType.STOP -> {
                 // FIXME: we can't get packageName this case, we can only remove all
                 data.clear()
+                Log.d(TAG, "onLyricStop:")
                 SmartspacerTargetProvider.notifyChange(context, LyricTarget::class.java)
             }
         }

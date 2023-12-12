@@ -11,8 +11,8 @@ android {
         applicationId = "io.github.duzhaokun123.smartspacerlyric"
         minSdk = 33
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
     packaging {
         resources.excludes.addAll(
