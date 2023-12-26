@@ -8,6 +8,7 @@ import android.util.Log
 import cn.lyric.getter.api.data.LyricData
 import cn.lyric.getter.api.data.type.OperateType
 import cn.lyric.getter.api.tools.Tools
+import com.kieronquinn.app.smartspacer.sdk.provider.SmartspacerComplicationProvider
 import com.kieronquinn.app.smartspacer.sdk.provider.SmartspacerTargetProvider
 
 class LyricReceiver : BroadcastReceiver() {
@@ -21,22 +22,22 @@ class LyricReceiver : BroadcastReceiver() {
         const val TAG = "LyricReceiver"
 
         val data = mutableMapOf<String, Data>()
-
-        fun getData(packageName: String): Data {
-            return data.getOrPut(packageName) { Data() }
-        }
+        var lastLyricData: LyricData? = null
+        var lastLyricIcon: Icon? = null
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
         context ?: return
         intent ?: return
         val lyricData = intent.getParcelableExtra("Data", LyricData::class.java) ?: return
+        lastLyricData = lyricData
         when(lyricData.type) {
             OperateType.UPDATE -> {
                 val packageName = lyricData.extraData.packageName
                 val icon = lyricData.extraData.base64Icon
                     .takeIf { lyricData.extraData.customIcon }
                     ?.let { Icon.createWithAdaptiveBitmap(Tools.base64ToDrawable(lyricData.extraData.base64Icon)) }
+                lastLyricIcon = icon
                 data.getOrPut(packageName) { Data() }.apply {
                     lyric = lyricData.lyric
                     this.icon = icon
@@ -52,5 +53,6 @@ class LyricReceiver : BroadcastReceiver() {
                 SmartspacerTargetProvider.notifyChange(context, LyricTarget::class.java)
             }
         }
+        SmartspacerComplicationProvider.notifyChange(context, LyricOnlyComplication::class.java)
     }
 }
